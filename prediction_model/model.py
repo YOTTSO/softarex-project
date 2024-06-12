@@ -13,9 +13,9 @@ def replace_open_dates(df):
     return df
 
 
-data_train = pd.read_csv("train.csv")
-data_test = pd.read_csv("test.csv")
-y_test = pd.read_csv("sampleSubmission.csv")["Prediction"]
+data_train = pd.read_csv("datasets/train.csv")
+data_test = pd.read_csv("datasets/test.csv")
+y_test = pd.read_csv("datasets/sampleSubmission.csv")["Prediction"]
 data_train = replace_open_dates(data_train)
 data_test = replace_open_dates(data_test)
 
