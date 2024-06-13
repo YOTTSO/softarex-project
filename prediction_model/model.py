@@ -4,6 +4,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error
 from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 from xgboost import XGBRegressor
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 def replace_open_dates(df):
     df['Open Date'] = pd.to_datetime(df['Open Date'], format='%m/%d/%Y')
@@ -24,18 +25,14 @@ for i in range(1, 38):
     data_train[column_name] = data_train[column_name].astype(float)
     data_test[column_name] = data_test[column_name].astype(float)
 
-X_train = data_train[["Open Date", "City", "Type", "Points1", "Points2", "Points3", "Points4", "Points5", "Points6",
-                      "Points7", "Points8", "Points9", "Points10", "Points11", "Points12", "Points13", "Points14",
-                      "Points15", "Points16", "Points17", "Points18", "Points19", "Points20", "Points21", "Points22",
-                      "Points23", "Points24", "Points25", "Points26", "Points27", "Points28", "Points29", "Points30",
-                      "Points31", "Points32", "Points33", "Points34", "Points35", "Points36", "Points37"]]
+X_train = data_train[["Open Date", "City", "Type", "Points1", "Points2", "Points3", "Points5", "Points6",
+                      "Points7", "Points9", "Points11", "Points14", "Points21", "Points24", "Points26",
+                      "Points31", "Points37"]]
 y_train = data_train.revenue
 
-X_test = data_test[["Open Date", "City", "Type", "Points1", "Points2", "Points3", "Points4", "Points5", "Points6",
-                      "Points7", "Points8", "Points9", "Points10", "Points11", "Points12", "Points13", "Points14",
-                      "Points15", "Points16", "Points17", "Points18", "Points19", "Points20", "Points21", "Points22",
-                      "Points23", "Points24", "Points25", "Points26", "Points27", "Points28", "Points29", "Points30",
-                      "Points31", "Points32", "Points33", "Points34", "Points35", "Points36", "Points37"]]
+X_test = data_test[["Open Date", "City", "Type", "Points1", "Points2", "Points3", "Points5", "Points6",
+                      "Points7", "Points9", "Points11", "Points14", "Points21", "Points24", "Points26",
+                      "Points31", "Points37"]]
 
 
 X_all = pd.concat([X_train, X_test])
@@ -74,8 +71,13 @@ mae = mean_absolute_error(y_test, predictions)
 print(f"Среднеквадратичная ошибка (MSE): {mse}")
 print(f"Средняя абсолютная ошибка (MAE): {mae}")
 
-plt.figure(figsize=(10, 6))
+correlation_matrix = X_train.corr()
+plt.figure(figsize=(12, 10))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f")
+plt.title("Матрица корреляции")
+plt.show()
 
+plt.figure(figsize=(10, 6))
 plt.subplot(2, 1, 1)
 plt.scatter(y_test, predictions)
 plt.xlabel("Фактические значения")
