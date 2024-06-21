@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Restaurant revenue prediction</title>
+    </head>
+<body>
+    {% if user.is_authenticated %}
+        <p>Hello, {{ user.username }}!
+         <form method="POST" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit">Logout</button>
+            </form>
+        </p>
+        <p><a href="{% url 'history' %}">History</a></p>
+        <p><a href="{% url 'predict_revenue' %}">Return to main page</a></p>
+    {% endif %}
+
+    {% block content %}
+    {% endblock %}
+</body>
+</html>

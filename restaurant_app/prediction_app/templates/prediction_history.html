@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Predictions history</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Open date</th>
+        <th>City</th>
+        <th>Approximate revenue</th>
+        <th>Prediction date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for prediction in predictions %}
+        <tr>
+          <td>{{ prediction.open_date }}</td>
+          <td>{{ prediction.city }}</td>
+          <td>{{ prediction.predicted_revenue }}</td>
+          <td>{{ prediction.created_at }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if not predictions %}
+    <p>You don't have any predictions yet.</p>
+  {% endif %}
+{% endblock %}
