@@ -1,7 +1,6 @@
 import pandas as pd
 import datetime
 from sklearn.metrics import mean_squared_error, mean_absolute_error
-from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 import pickle
 from xgboost import XGBRegressor
@@ -27,13 +26,11 @@ for i in range(1, 38):
     data_test[column_name] = data_test[column_name].astype(float)
 
 X_train = data_train[["Open Date", "City", "Type", "Points1", "Points2", "Points3", "Points5", "Points6",
-                      "Points7", "Points9", "Points11", "Points14", "Points21", "Points24", "Points26",
-                      "Points31", "Points37"]]
+                      "Points7", "Points11", "Points14", "Points21", "Points24", "Points26", "Points37"]]
 y_train = data_train.revenue
 
 X_test = data_test[["Open Date", "City", "Type", "Points1", "Points2", "Points3", "Points5", "Points6",
-                      "Points7", "Points9", "Points11", "Points14", "Points21", "Points24", "Points26",
-                      "Points31", "Points37"]]
+                      "Points7", "Points11", "Points14", "Points21", "Points24", "Points26", "Points37"]]
 
 X_all = pd.concat([X_train, X_test])
 
@@ -81,8 +78,10 @@ model.fit(X_train, y_train,  eval_set=[(X_train, y_train)],
           eval_metric='rmse', verbose=True, early_stopping_rounds=4)
 
 evals_result = model.evals_result()
+rmse = evals_result['validation_0']['rmse'][-1]
+print(f"Корневая среднеквадратичная ошибка (RMSE): {rmse}")
 
-with open('model.pkl', 'wb') as file:
+with open('../restaurant_app/prediction_app/model.pkl', 'wb') as file:
     pickle.dump([model, scaler, label_encoder_city, label_encoder_type], file)
 
 predictions = model.predict(X_test)
