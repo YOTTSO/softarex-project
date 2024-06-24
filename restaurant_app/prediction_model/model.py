@@ -81,7 +81,7 @@ evals_result = model.evals_result()
 rmse = evals_result['validation_0']['rmse'][-1]
 print(f"Корневая среднеквадратичная ошибка (RMSE): {rmse}")
 
-with open('../restaurant_app/prediction_app/model.pkl', 'wb') as file:
+with open('model.pkl', 'wb') as file:
     pickle.dump([model, scaler, label_encoder_city, label_encoder_type], file)
 
 predictions = model.predict(X_test)

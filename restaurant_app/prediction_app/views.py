@@ -1,3 +1,4 @@
+import json
 import pickle
 import pandas as pd
 import datetime
@@ -7,17 +8,14 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .forms import PredictionForm, UserForm
 from .models import Prediction
-
-with open('prediction_app/model.pkl', 'rb') as file:
-    loaded_model, scaler, label_encoder_city, label_encoder_type = pickle.load(file)
+from confluent_kafka import Producer, Consumer
 
 
-def replace_open_dates(df):
-    df['Open Date'] = pd.to_datetime(df['Open Date'], format='%m/%d/%Y')
-    today = datetime.date.today()
-    for i in range(len(df)):
-        df['Open Date'][i] = (today - df['Open Date'][i].date()).days
-    return df['Open Date'].values[0]
+conf = {
+    'bootstrap.servers': 'kafka:9092',
+    'group.id': 'django_group',
+    'auto.offset.reset': 'earliest'
+}
 
 
 @login_required('', 'login', 'login')
@@ -57,15 +55,19 @@ def predict_revenue(request):
                 'Points24': [break_point_10],
                 'Points26': [break_point_11],
                 'Points37': [break_point_12]
-            }, index=[0])
+            })
 
-            input_data['Open Date'] = replace_open_dates(input_data)
-            input_data['City'] = label_encoder_city.transform(input_data['City'])
-            input_data['Type'] = label_encoder_type.transform(input_data['Type'])
-            data = scaler.transform(input_data)
-            predictions = loaded_model.predict(data)
-            predictions = predictions.astype(int)
+            input_df = pd.DataFrame(input_data)
+            input_json = input_df.to_json(orient='records')
+            producer = Producer(conf)
+            producer.produce('input_topic', key=None, value=input_json.encode('utf-8'))
+            producer.flush()
 
+            consumer = Consumer(conf)
+            consumer.subscribe(['output_topic'])
+            msg = consumer.poll(1.0)
+            result = json.loads(msg.value().decode('utf-8'))
+            prediction = result['prediction']
             prediction = Prediction(
                 user=request.user,
                 open_date=form.cleaned_data['open_date'],
@@ -83,18 +85,20 @@ def predict_revenue(request):
                 break_point_10=form.cleaned_data['break_point_10'],
                 break_point_11=form.cleaned_data['break_point_11'],
                 break_point_12=form.cleaned_data['break_point_12'],
-                predicted_revenue=predictions,
+                predicted_revenue=prediction,
             )
             prediction.save()
-            return render(request, 'prediction_result.html', {'prediction': predictions[0]})
+            return render(request, 'prediction_result.html', {'prediction': prediction})
     else:
         form = PredictionForm()
     return render(request, 'prediction_form.html', {'form': form})
+
 
 @login_required
 def prediction_history(request):
     predictions = Prediction.objects.filter(user=request.user).order_by('-created_at')
     return render(request, 'prediction_history.html', {'predictions': predictions})
+
 
 def register_view(request):
     if request.method == 'POST':

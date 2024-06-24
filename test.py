@@ -2,7 +2,7 @@ import pickle
 import pandas as pd
 import datetime
 import tkinter as tk
-with open('restaurant_app/prediction_app/model.pkl', 'rb') as file:
+with open('restaurant_app/prediction_model/model.pkl', 'rb') as file:
     loaded_model, scaler, label_encoder_city, label_encoder_type = pickle.load(file)
 
 def replace_open_dates(df):
