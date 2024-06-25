@@ -83,4 +83,4 @@ def predict_revenue(request):
 
 ### Контакты
 
-[Illya Stavsky - YOTTSO]([https://github.com/YOTTSO]) 
+[Illya Stavsky - YOTTSO](https://t.me/yottso) 
