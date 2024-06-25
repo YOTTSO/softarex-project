@@ -1,5 +1,7 @@
 import json
 import pickle
+from time import sleep
+
 import pandas as pd
 import datetime
 from django.contrib.auth import login
@@ -17,6 +19,16 @@ conf = {
     'auto.offset.reset': 'earliest'
 }
 
+def wait_for_kafka():
+    while True:
+        try:
+            producer = Producer(conf)
+            producer.purge()
+            print("Kafka готова!")
+            break
+        except Exception as e:
+            print(f"Ошибка подключения к Kafka: {e}")
+            sleep(5)
 
 @login_required('', 'login', 'login')
 def predict_revenue(request):
@@ -57,17 +69,20 @@ def predict_revenue(request):
                 'Points37': [break_point_12]
             })
 
-            input_df = pd.DataFrame(input_data)
-            input_json = input_df.to_json(orient='records')
+            wait_for_kafka()
+            input_json = input_data.to_json(orient='records')
             producer = Producer(conf)
-            producer.produce('input_topic', key=None, value=input_json.encode('utf-8'))
+            producer.produce('input_topic', json.dumps(input_json).encode('utf-8'))
             producer.flush()
 
             consumer = Consumer(conf)
             consumer.subscribe(['output_topic'])
-            msg = consumer.poll(1.0)
-            result = json.loads(msg.value().decode('utf-8'))
-            prediction = result['prediction']
+            msg = consumer.poll(200.0)
+            if msg is None:
+                predictions = 69
+            else:
+                response = json.loads(msg.value().decode('utf-8'))
+                predictions = int(msg.value().decode('utf-8'))
             prediction = Prediction(
                 user=request.user,
                 open_date=form.cleaned_data['open_date'],
@@ -85,7 +100,7 @@ def predict_revenue(request):
                 break_point_10=form.cleaned_data['break_point_10'],
                 break_point_11=form.cleaned_data['break_point_11'],
                 break_point_12=form.cleaned_data['break_point_12'],
-                predicted_revenue=prediction,
+                predicted_revenue=predictions,
             )
             prediction.save()
             return render(request, 'prediction_result.html', {'prediction': prediction})

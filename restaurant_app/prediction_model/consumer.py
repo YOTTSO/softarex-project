@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+import datetime
 import pandas as pd
 from confluent_kafka import Consumer, Producer
 import pickle
@@ -26,11 +26,6 @@ def replace_open_dates(df):
 consumer = Consumer(conf)
 producer = Producer(conf)
 consumer.subscribe(['input_topic'])
-conf = {
-    'bootstrap.servers': 'kafka:9092',
-    'group.id': 'model_group',
-    'auto.offset.reset': 'earliest'
-}
 
 while True:
     msg = consumer.poll(1.0)
@@ -38,8 +33,8 @@ while True:
     if msg is None:
         continue
 
-    input_json = msg.value().decode('utf-8')
-    input_df = pd.read_json(input_json, orient='records')
+    df_json = json.loads(msg.value().decode('utf-8'))
+    input_df = pd.read_json(df_json, orient='records')
 
     input_df['Open Date'] = replace_open_dates(input_df)
     input_df['City'] = label_encoder_city.transform(input_df['City'])
@@ -47,9 +42,5 @@ while True:
     data = scaler.transform(input_df)
     predictions = loaded_model.predict(data)
     predictions = predictions.astype(int)
-    result = {
-        'input_data': input_df,
-        'prediction': predictions
-    }
-    producer.produce('output_topic', key=None, value=json.dumps(result).encode('utf-8'))
+    producer.produce('output_topic', str(predictions[0]).encode('utf-8'))
     producer.flush()
