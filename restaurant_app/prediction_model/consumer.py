@@ -2,11 +2,12 @@ import json
 import datetime
 import pandas as pd
 from confluent_kafka import Consumer, Producer
-import pickle
+import pickle, os
 
+KAFKA_BOOTSTRAP_SERVERS = os.environ.get('KAFKA_BOOTSTRAP_SERVERS')
 
 conf = {
-    'bootstrap.servers': 'kafka:9092',
+    'bootstrap.servers': KAFKA_BOOTSTRAP_SERVERS,
     'group.id': 'model_group',
     'auto.offset.reset': 'earliest'
 }

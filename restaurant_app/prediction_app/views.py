@@ -1,9 +1,6 @@
-import json
-import pickle
+import json, os
 from time import sleep
-
 import pandas as pd
-import datetime
 from django.contrib.auth import login
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.shortcuts import render, redirect
@@ -12,9 +9,10 @@ from .forms import PredictionForm, UserForm
 from .models import Prediction
 from confluent_kafka import Producer, Consumer
 
+KAFKA_BOOTSTRAP_SERVERS = os.environ.get('KAFKA_BOOTSTRAP_SERVERS')
 
 conf = {
-    'bootstrap.servers': 'kafka:9092',
+    'bootstrap.servers': KAFKA_BOOTSTRAP_SERVERS,
     'group.id': 'django_group',
     'auto.offset.reset': 'earliest'
 }
@@ -103,7 +101,7 @@ def predict_revenue(request):
                 predicted_revenue=predictions,
             )
             prediction.save()
-            return render(request, 'prediction_result.html', {'prediction': prediction})
+            return render(request, 'prediction_result.html', {'prediction': predictions})
     else:
         form = PredictionForm()
     return render(request, 'prediction_form.html', {'form': form})
